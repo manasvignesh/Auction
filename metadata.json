@@ -1,0 +1,5 @@
+{
+  "name": "Cricket Auction Arena",
+  "description": "A live multiplayer cricket player auction simulator where users act as team owners and bid for players in real time.",
+  "requestFramePermissions": []
+}

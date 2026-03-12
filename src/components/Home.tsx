@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { socket } from '../socket';
 import { motion } from 'motion/react';
 
-export function Home({ error, onCreateRoom, onJoinRoom }: {
+export function Home({ error, onCreateRoom, onJoinRoom, onQuickJoin }: {
   error: string | null;
   onCreateRoom: (roomId: string) => void;
   onJoinRoom: (roomId: string) => void;
+  onQuickJoin: () => void;
 }) {
   const [roomId, setRoomId] = useState('');
   const [mode, setMode] = useState<'create' | 'join'>('create');
@@ -125,7 +126,26 @@ export function Home({ error, onCreateRoom, onJoinRoom }: {
           transition={{ delay: 0.2 }}
           className="w-full max-w-sm"
         >
-          <div className="bg-[#111114] border border-white/8 rounded-2xl overflow-hidden">
+          {/* Play Now Button */}
+          <button
+            onClick={onQuickJoin}
+            disabled={isLoading}
+            className="w-full mb-6 py-5 rounded-2xl font-bold text-lg tracking-[0.15em] uppercase transition-all duration-300 relative overflow-hidden group shadow-[0_0_30px_rgba(232,184,75,0.2)] hover:shadow-[0_0_50px_rgba(232,184,75,0.4)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, #FAD961 0%, #F76B1C 100%)',
+              color: '#0A0A0C',
+            }}
+          >
+            <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity" />
+            <div className="relative z-10 flex items-center justify-center gap-3">
+              <span className="text-xl">⚡</span>
+              <span>Play Now</span>
+            </div>
+            {/* Shimmer effect */}
+            <div className="absolute top-0 -left-[100%] w-1/2 h-full bg-white/20 -skew-x-[25deg] animate-[shimmer-streak_3s_infinite]" />
+          </button>
+
+          <div className="bg-[#111114] border border-white/8 rounded-2xl overflow-hidden shadow-2xl">
             {/* Tabs */}
             <div className="flex border-b border-white/5">
               {(['create', 'join'] as const).map(m => (

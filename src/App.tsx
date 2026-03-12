@@ -92,8 +92,19 @@ export default function App() {
     socket.emit('join_room', { roomId: targetRoomId.toUpperCase() });
   };
 
+  const handleQuickJoin = () => {
+    socket.emit('quick_join');
+  };
+
   if (!room) {
-    return <Home error={error} onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} />;
+    return (
+      <Home 
+        error={error} 
+        onCreateRoom={handleCreateRoom} 
+        onJoinRoom={handleJoinRoom} 
+        onQuickJoin={handleQuickJoin} 
+      />
+    );
   }
 
   if (room.auctionState.status === 'lobby') {

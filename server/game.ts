@@ -71,6 +71,25 @@ export function joinRoom(roomId: string, teamId: string): Room | null {
   return room;
 }
 
+export function quickJoinRoom(teamId: string): Room {
+  // 1. Find an existing room in 'lobby' state with < 8 teams
+  const availableRoom = Object.values(rooms).find(r => 
+    r.auctionState.status === 'lobby' && 
+    Object.keys(r.teams).length < 8
+  );
+
+  if (availableRoom) {
+    joinRoom(availableRoom.id, teamId);
+    return availableRoom;
+  }
+
+  // 2. No open rooms? Create a random 5-char alphanumeric ID
+  const newRoomId = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const newRoom = createRoom(newRoomId, teamId);
+  joinRoom(newRoomId, teamId);
+  return newRoom;
+}
+
 export function updateTeam(roomId: string, teamId: string, name: string, city: City): { success: boolean, error?: string } {
   const room = rooms[roomId];
   if (!room) return { success: false, error: 'Room not found' };

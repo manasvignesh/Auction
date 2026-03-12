@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { createRoom, getRoom, joinRoom, leaveRoom, setReady, canStartAuction, startAuction, placeBid, processAuctionTimer, City, updateTeam, setRoomInterval, clearRoomInterval } from './game';
+import { createRoom, getRoom, joinRoom, leaveRoom, setReady, canStartAuction, startAuction, placeBid, processAuctionTimer, City, updateTeam, setRoomInterval, clearRoomInterval, quickJoinRoom } from './game';
 
 export function setupAuctionSocket(io: Server) {
   io.on('connection', (socket: Socket) => {
@@ -67,6 +67,16 @@ export function setupAuctionSocket(io: Server) {
         io.to(data.roomId).emit('bid_placed', getRoom(data.roomId));
       } else {
         socket.emit('bid_error', 'Invalid bid');
+      }
+    });
+
+    socket.on('quick_join', () => {
+      const room = quickJoinRoom(socket.id);
+      if (room) {
+        socket.join(room.id);
+        io.to(room.id).emit('room_update', room);
+      } else {
+        socket.emit('error', 'Matchmaking failed. Please try again.');
       }
     });
 

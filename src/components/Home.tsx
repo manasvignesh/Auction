@@ -128,6 +128,7 @@ export function Home({ error, onCreateRoom, onJoinRoom, onQuickJoin }: {
         >
           {/* Play Now Button */}
           <button
+            type="button"
             onClick={onQuickJoin}
             disabled={isLoading}
             className="w-full mb-6 py-5 rounded-2xl font-bold text-lg tracking-[0.15em] uppercase transition-all duration-300 relative overflow-hidden group shadow-[0_0_30px_rgba(232,184,75,0.2)] hover:shadow-[0_0_50px_rgba(232,184,75,0.4)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"

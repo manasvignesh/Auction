@@ -43,6 +43,8 @@ async function startServer() {
       }
 
       const genAI = new GoogleGenAI({ apiKey });
+      const prompt = `You are the legendary cricket commentator Harsha Bhogle. You just witnessed a high-stakes IPL Franchise Auction. Here are the final results for all teams:\n\n${teams.map((t: any) => `${t.rank}. ${t.name} (${t.city}) — Score: ${t.score}/100, ₹${t.budgetLeft}Cr left\n   Squad: ${t.players}`).join('\n\n')}\n\nPlease write a witty, insightful, and slightly poetic post-auction summary in exactly 3 paragraphs. Use your signature "Harsha" style — mix profound tactical observations with a genuine love for the game's unpredictability. Mention the winner and one standout squad-building strategy you noticed. Return ONLY the text of the analysis.`;
+
       const result = await genAI.models.generateContent({ 
         model: "gemini-1.5-flash",
         contents: prompt 

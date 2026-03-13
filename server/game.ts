@@ -160,6 +160,17 @@ export function startAuction(roomId: string, mode: 'quick' | 'full') {
   };
 }
 
+export function forceCompleteAuction(roomId: string, teamId: string): Room | null {
+  const room = rooms[roomId];
+  if (!room) return null;
+  // Security check: Only the host can force complete
+  if (room.hostId !== teamId) return null; 
+  if (room.auctionState.status !== 'in_progress') return null;
+
+  room.auctionState.status = 'finished';
+  return room;
+}
+
 export function placeBid(roomId: string, teamId: string, amount: number): boolean {
   const room = rooms[roomId];
   if (!room || room.auctionState.status !== 'in_progress') return false;
@@ -169,39 +180,16 @@ export function placeBid(roomId: string, teamId: string, amount: number): boolea
 
   const state = room.auctionState;
   
-  // If amount is 0, it means bidding the base price
-  const newBid = amount === 0 && !state.highestBidderId ? state.currentBid : state.currentBid + amount;
+  // If no one has bid yet, the first bid MUST be exactly the base price, regardless of the button clicked.
+  // If someone has bid, the new bid must be higher than the current bid (prevent stealing with +0).
+  if (state.highestBidderId && amount <= 0) return false;
+  const newBid = !state.highestBidderId ? state.currentBid : state.currentBid + amount;
 
   // Check budget
   if (team.budget < newBid) return false;
 
-  // Check squad rules
-  if (team.squad.length >= 11) return false;
-
-  // Strict minimums check
-  // If buying this player prevents them from reaching the minimums with remaining slots, block it.
-  const currentPlayer = state.playersPool[state.currentPlayerIndex];
-  const newSquad = [...team.squad, currentPlayer];
-  
-  const bats = newSquad.filter(p => p.role === 'Batsman').length;
-  const bowls = newSquad.filter(p => p.role === 'Bowler').length;
-  const wks = newSquad.filter(p => p.role === 'Wicketkeeper').length;
-  
-  const remainingSlots = 11 - newSquad.length;
-  const neededBats = Math.max(0, 4 - bats);
-  const neededBowls = Math.max(0, 3 - bowls);
-  const neededWks = Math.max(0, 1 - wks);
-  
-  const totalNeeded = neededBats + neededBowls + neededWks;
-  
-  if (totalNeeded > remainingSlots) {
-    return false; // Cannot fulfill minimum requirements if they buy this player
-  }
-  
-  // They must have enough budget left to buy the minimum required players at 0.5 Cr each
-  if (team.budget - newBid < totalNeeded * 0.5) {
-    return false;
-  }
+  // Check squad rules (Mega Auction: 25 player limit, no role constraints)
+  if (team.squad.length >= 25) return false;
 
   // Can't bid against yourself
   if (state.highestBidderId === teamId) return false;

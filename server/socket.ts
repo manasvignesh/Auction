@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { createRoom, getRoom, joinRoom, leaveRoom, setReady, canStartAuction, startAuction, placeBid, processAuctionTimer, City, updateTeam, setRoomInterval, clearRoomInterval, quickJoinRoom } from './game';
+import { createRoom, getRoom, joinRoom, leaveRoom, setReady, canStartAuction, startAuction, placeBid, processAuctionTimer, City, updateTeam, setRoomInterval, clearRoomInterval, quickJoinRoom, forceCompleteAuction } from './game';
 
 export function setupAuctionSocket(io: Server) {
   io.on('connection', (socket: Socket) => {
@@ -67,6 +67,16 @@ export function setupAuctionSocket(io: Server) {
         io.to(data.roomId).emit('bid_placed', getRoom(data.roomId));
       } else {
         socket.emit('bid_error', 'Invalid bid');
+      }
+    });
+
+    socket.on('force_complete', (data: { roomId: string }) => {
+      const room = forceCompleteAuction(data.roomId, socket.id);
+      if (room) {
+        clearRoomInterval(data.roomId);
+        io.to(data.roomId).emit('auction_finished', room);
+      } else {
+        socket.emit('error', 'Only the host can end the auction.');
       }
     });
 

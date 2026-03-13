@@ -245,24 +245,27 @@ export function Auction({ room }: { room: Room }) {
     };
   }, [addActivity, state.highestBidderId, playTick, playBid, playGavel]);
 
-  const canBid = (newBid: number): boolean => {
+  const canBid = (amount: number): boolean => {
     if (!me || result) return false;
     if (amLeading) return false;
+    
+    // Mega Auction Rules: 25 player limit, no role constraints
+    const newBid = !state.highestBidderId ? state.currentBid : state.currentBid + amount;
+    
     if (me.budget < newBid) return false;
-    if (me.squad.length >= 11) return false;
-    const newSquad = [...me.squad, currentPlayer];
-    const bats = newSquad.filter(p => p.role === 'Batsman').length;
-    const bowls = newSquad.filter(p => p.role === 'Bowler').length;
-    const wks = newSquad.filter(p => p.role === 'Wicketkeeper').length;
-    const remaining = 11 - newSquad.length;
-    const needed = Math.max(0, 4 - bats) + Math.max(0, 3 - bowls) + Math.max(0, 1 - wks);
-    if (needed > remaining) return false;
-    if (me.budget - newBid < needed * 0.5) return false;
+    if (me.squad.length >= 25) return false;
+    
     return true;
   };
 
   const handleBid = (amount: number) => {
     socket.emit('place_bid', { roomId: room.id, amount });
+  };
+
+  const handleForceComplete = () => {
+    if (window.confirm('Are you sure you want to end the auction and see the results?')) {
+      socket.emit('force_complete', { roomId: room.id });
+    }
   };
 
   const handleEmote = (emoji: string) => {
@@ -321,6 +324,16 @@ export function Auction({ room }: { room: Room }) {
             <span className="text-sm">📋</span>
             <span className="text-[10px] text-[#5A5A6A] group-hover:text-white tracking-widest uppercase font-semibold">Directory</span>
           </button>
+          
+          {room.hostId === myId && (
+            <button
+              onClick={handleForceComplete}
+              className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors group"
+            >
+              <span className="text-sm">🏁</span>
+              <span className="text-[10px] text-red-400 tracking-widest uppercase font-semibold">End Auction</span>
+            </button>
+          )}
           <div className="w-px h-6 bg-white/5" />
           <div className="text-center">
             <div
@@ -392,7 +405,7 @@ export function Auction({ room }: { room: Room }) {
                     <span className="font-mono text-[11px] font-medium" style={{ color: team.budget < 15 ? '#EF4444' : color }}>
                       ₹{team.budget.toFixed(1)}
                     </span>
-                    <span className="text-[10px] text-[#5A5A6A]">{team.squad.length}/11</span>
+                    <span className="text-[10px] text-[#5A5A6A]">{team.squad.length}/25</span>
                   </div>
                   <div className="mt-1.5 h-0.5 bg-white/5 rounded overflow-hidden">
                     <div className="h-full rounded" style={{ width: `${bPct}%`, background: color, opacity: 0.6 }} />
@@ -569,7 +582,7 @@ export function Auction({ room }: { room: Room }) {
                       {/* My squad summary */}
                       <div className="mt-auto pt-3 border-t border-white/5">
                         <div className="text-[10px] font-semibold tracking-[0.15em] uppercase text-[#5A5A6A] mb-2">
-                          My Squad ({me?.squad.length || 0}/11)
+                          My Squad ({me?.squad.length || 0}/25)
                         </div>
                         <div className="flex flex-wrap gap-1">
                           {['Batsman', 'Bowler', 'All-rounder', 'Wicketkeeper'].map(role => {
